@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  cloudcart-react:
+    build: .
+    ports:
+      - "80:80"
+    volumes:
+      - ./public:/usr/share/nginx/html 
+    restart: always
+    container_name: cloudcart-react
+    environment:
+      - REACT_APP_API_URL=http://api:8080
+    depends_on:
+      - node_app
+      - spring_app
+
