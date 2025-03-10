@@ -23,7 +23,6 @@ jobs:
     # Install dependencies and build the React app
     - name: Install dependencies and build the app
       run: |
-        cd client  # Change to the directory where your React app is located
         npm install
         npm run build
 
