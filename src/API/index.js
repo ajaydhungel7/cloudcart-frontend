@@ -1,4 +1,4 @@
-const API_URL = "http://k8s-app-appingre-b9998dc440-1535321008.us-east-1.elb.amazonaws.com/products";
+const API_URL = "k8s-appingressgroup-9b0a5c907e-1443798777.us-east-1.elb.amazonaws.com/products";
 
 export const getAllProducts = () => {
   return fetch(API_URL + "/products").then((res) => res.json());
