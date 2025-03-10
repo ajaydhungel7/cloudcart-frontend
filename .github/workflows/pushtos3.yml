@@ -29,10 +29,12 @@ jobs:
         run: npm run build
       
       - name: AWS OIDC Authentication
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-         role-to-assume: arn:aws:iam::544234170512:role/GithubRole  # Replace with your role ARN
-         aws-region: us-east-1  # Modify the region as needed
+          role-to-assume: arn:aws:iam::544234170512:role/GithubRole #change to reflect your IAM role’s ARN
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: us-east-1  # Modify
+
 
       
       - name: Deploy to S3
