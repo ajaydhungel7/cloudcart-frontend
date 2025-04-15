@@ -19,9 +19,10 @@ import { PageHeader } from "@ant-design/pro-layout";
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../context/Auth";
-import { getCart } from "../../../API";
+import { getCart } from "../../../API/cart";
 import { useLanguage } from "../../../context/Language";
 import { useLocation } from "react-router-dom";
+import { useCart } from "../../../context/Cart";
 
 function handleLogout(logout) {
   try {
@@ -40,7 +41,7 @@ function AppHeader() {
   const { pathname: location } = useLocation();
   let { t } = useLanguage();
   let { user, logout } = useAuth();
-  
+
   let navigate = useNavigate();
   if (location === "/") return null;
 
@@ -50,10 +51,10 @@ function AppHeader() {
         className="appMenu"
         onClick={onMenuClick}
         mode="horizontal"
-        
+
         items={[
           {
-            label: <HomeFilled style={{fontSize: "20px"}}/>,
+            label: <HomeFilled style={{ fontSize: "20px" }} />,
             key: "",
           },
           {
@@ -107,32 +108,38 @@ function AppHeader() {
         ]}
       />
       <div className="appHeader flex-fap-2">
-      <AppCart />
+        <AppCart user={user} />
         {
           user ? (
-          <Button icon={<LogoutOutlined className="red-color"/>} onClick={(e) => handleLogout(logout)}>
-            {t("menu.logout")}
-          </Button>
-          ): 
-          (
-            <Button icon={<LoginOutlined className="green-color"/>} onClick={(e) => navigate("/login")}>
-            {t("login.title")}
-          </Button>
-          )
+            <Button icon={<LogoutOutlined className="red-color" />} onClick={(e) => handleLogout(logout)}>
+              {t("menu.logout")}
+            </Button>
+          ) :
+            (
+              <Button icon={<LoginOutlined className="green-color" />} onClick={(e) => navigate("/login")}>
+                {t("login.title")}
+              </Button>
+            )
         }
       </div>
     </div>
   );
 }
-function AppCart() {
+function AppCart({ user }) {
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const [checkoutDrawerOpen, setCheckoutDrawerOpen] = useState(false);
-  const [cartItems, setCartItems] = useState([]);
+  const { cartItems } = useCart();
+
+  console.log('Cart items')
+  console.log(cartItems);
   useEffect(() => {
-    getCart().then((res) => {
-      setCartItems(res.products);
-    });
-  }, []);
+    if (user) {
+      getCart(user._id).then((res) => {
+        // console.log(res)
+        // setCartItems(res);
+      });
+    }
+  }, [user]);
   const onConfirmOrder = (values) => {
     setCartDrawerOpen(false);
     setCheckoutDrawerOpen(false);
@@ -145,7 +152,7 @@ function AppCart() {
         onClick={() => {
           setCartDrawerOpen(true);
         }}
-        count={cartItems.length}
+        count={cartItems.length }
         className="soppingCartIcon"
       >
         <ShoppingCartOutlined />
@@ -163,11 +170,18 @@ function AppCart() {
           columns={[
             {
               title: "Title",
-              dataIndex: "title",
+              dataIndex: ["item", "title"],
+              render: (value) => {
+                // return <span>{value}</span>;
+                return <span>{ value.length > 60 ? 
+                  value.substring(0, 60 - 3) + "..." : 
+                  value}</span>;
+               
+              },
             },
             {
               title: "Price",
-              dataIndex: "price",
+              dataIndex: ["item", "price"],
               render: (value) => {
                 return <span>${value}</span>;
               },
@@ -181,14 +195,14 @@ function AppCart() {
                     min={0}
                     defaultValue={value}
                     onChange={(value) => {
-                      setCartItems((pre) =>
-                        pre.map((cart) => {
-                          if (record.id === cart.id) {
-                            cart.total = cart.price * value;
-                          }
-                          return cart;
-                        })
-                      );
+                      // setCartItems((pre) =>
+                      //   pre.map((cart) => {
+                      //     if (record.id === cart.id) {
+                      //       cart.total = cart.price * value;
+                      //     }
+                      //     return cart;
+                      //   })
+                      // );
                     }}
                   ></InputNumber>
                 );
@@ -196,18 +210,19 @@ function AppCart() {
             },
             {
               title: "Total",
-              dataIndex: "total",
-              render: (value) => {
-                return <span>${value}</span>;
+              render: (_,record) => {
+                return <span>${record.item.price * record.quantity}</span>;
               },
             },
           ]}
           dataSource={cartItems}
           summary={(data) => {
             const total = data.reduce((pre, current) => {
+              const itemTotal = (current.quantity || 0) * (current.item.price || 0);
+    return pre + itemTotal;
               return pre + current.total;
             }, 0);
-            return <span>Total: ${total}</span>;
+            return <h2>Total: ${total.toFixed(2)}</h2>;
           }}
         />
         <Button
@@ -215,6 +230,7 @@ function AppCart() {
             setCheckoutDrawerOpen(true);
           }}
           type="primary"
+          style={{float:'right', display:cartItems.length > 0? 'inline':'none'}}
         >
           Checkout Your Cart
         </Button>

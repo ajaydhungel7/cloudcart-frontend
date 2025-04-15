@@ -15,17 +15,18 @@ export const AuthProvider = (props) => {
 
   // Registration using JWT-based REST API
   const registerUser = async (email, password, firstName, lastName) => {
-    return axios.post("/api/auth/register", { email, password, firstName, lastName });
+    return axios.post("/auth/register", { email, password, firstName, lastName });
   };
   
   // Login using JWT-based REST API
   const loginUser = async (email, password, setIsLoggingIn=null) => {
     try {
-      const response = await axios.post("/api/auth/login", { email, password });
+      const response = await axios.post("/auth/login", { email, password });
       const { token, user: userData } = response.data;
       
       // Save the JWT token in localStorage and update state
       localStorage.setItem("jwtToken", token);
+      localStorage.setItem("user", userData);
       setJwtToken(token);
       setUser(userData);
 
@@ -45,6 +46,7 @@ export const AuthProvider = (props) => {
   // Logout clears token and user data
   const logout = () => {
     localStorage.removeItem("jwtToken");
+    localStorage.removeItem("user");
     setJwtToken(null);
     setUser(null);
     // removeLocalUserProfiles();
@@ -75,7 +77,7 @@ export const AuthProvider = (props) => {
   useEffect(() => {
     if (jwtToken) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${jwtToken}`;
-      axios.get("/api/auth/me")
+      axios.get("/auth/me")
         .then((res) => {
           setUser(res.data.user);
         })

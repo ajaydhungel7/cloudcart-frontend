@@ -9,16 +9,21 @@ import {
     Spin,
     Typography,
     Select,
+    notification,
   } from "antd";
   import { useEffect, useState } from "react";
-  import { addToCart, getAllProducts, getProductsByCategory } from "../API";
+  import { getAllProducts, getProductsByCategory } from "../API/product";
+  import { addToCart } from "../API/cart";
+  import { useAuth } from "../context/Auth";
   import { useParams } from "react-router-dom";
+  import {useCart} from "../context/Cart";
   
   function Products() {
     const [loading, setLoading] = useState(false);
     const param = useParams();
     const [items, setItems] = useState([]);
     const [sortOrder, setSortOrder] = useState("az");
+    const {cartItems, addToCart} = useCart();
     useEffect(() => {
       setLoading(true);
       (param?.categoryId
@@ -27,6 +32,13 @@ import {
       ).then((res) => {
         setItems(res.items);
         setLoading(false);
+      }).catch(err => {
+        setItems([]);
+        setLoading(false);
+        notification.error({
+          message: "Fetching Error",
+          description: "Failed to retrieve data",
+        });
       });
     }, [param]);
   
@@ -139,15 +151,57 @@ import {
     );
   }
   
-  function AddToCartButton({ item }) {
+  function AddToCartButton({ item}) {
+    const {user} = useAuth();
     const [loading, setLoading] = useState(false);
+    const {cartItems, addToCart} = useCart();
     const addProductToCart = () => {
       setLoading(true);
-      addToCart(item.id).then((res) => {
-        message.success(`${item.title} has been added to cart!`);
-        setLoading(false);
-      });
+      addToCart(item, user._id,setLoading);
     };
+    
+    // if(cartItems.length) {
+    //   return (
+    //     <Button
+    //       type="link"
+    //       onClick={() => {
+    //         addProductToCart();
+    //       }}
+    //       loading={loading}
+    //     >
+    //       Update Cart
+    //     </Button>
+    //   );
+    // }
+    let existsInCart = cartItems.some(el => el.item.id === item.id);
+    if(existsInCart){
+      return (
+        <div style={{ display: 'flex', gap: '0px', alignItems: 'center' }}>
+          <Button
+            type="link"
+            onClick={() => {
+              addProductToCart();
+            }}
+            loading={loading}
+            style={{ fontSize: '24px', fontWeight: 'bold' }}
+          >
+            +
+          </Button>
+          <b style={{color: 'black'}}>{cartItems.filter(el => el.item.id === item.id)[0].quantity}</b>
+          
+      
+          <Button
+            type="link"
+            onClick={() => {
+              addProductToCart();
+            }}
+            style={{ fontSize: '24px', fontWeight: 'bold' }}
+          >
+            -
+          </Button>
+        </div>
+      );
+    }
     return (
       <Button
         type="link"

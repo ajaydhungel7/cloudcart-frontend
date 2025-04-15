@@ -1,3 +1,4 @@
+import { useAuth } from "../../context/Auth";
 import { HomeFilled, ShoppingCartOutlined } from "@ant-design/icons";
 import {
   Badge,
@@ -15,9 +16,11 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCart } from "../../API";
+import { useCart } from "../../context/Cart";
 
 function AppHeader() {
   const navigate = useNavigate();
+  const {getCartItems} = useCart();
 
   const onMenuClick = (item) => {
     navigate(`/${item.key}`);
@@ -84,18 +87,18 @@ function AppHeader() {
         ]}
       />
       <Typography.Title>Aamir Store</Typography.Title>
-      <AppCart />
+      <AppCart getCartItems={getCartItems}/>
     </div>
   );
 }
-function AppCart() {
+function AppCart({getCartItems}) {
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const [checkoutDrawerOpen, setCheckoutDrawerOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
+  let { user, logout } = useAuth();
+  
   useEffect(() => {
-    getCart().then((res) => {
-      setCartItems(res.products);
-    });
+    getCartItems(user._id);
   }, []);
   const onConfirmOrder = (values) => {
     console.log({ values });
@@ -110,7 +113,7 @@ function AppCart() {
         onClick={() => {
           setCartDrawerOpen(true);
         }}
-        count={cartItems.length}
+        count={cartItems ? cartItems.length : 0}
         className="soppingCartIcon"
       >
         <ShoppingCartOutlined />
