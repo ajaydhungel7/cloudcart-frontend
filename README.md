@@ -1,5 +1,5 @@
 
-## Getting started
+## Getting started ok
 
 To make it easy for you to get started with the local development, here's a list of recommended next steps.
 
